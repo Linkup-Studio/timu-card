@@ -189,12 +189,13 @@ function timeLabel(iso) {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-/** 今日の状態から次の打刻種別を判定: "in"=出勤待ち / "out"=退勤待ち / "done"=完了 */
+/**
+ * 今日の状態から打刻種別を判定: "in"=出勤待ち / "out"=退勤
+ * 出勤は最初の1回が採用（最早優先）。退勤は何度でも押し直せる（最遅優先）
+ */
 function nextPunchMode() {
   const rec = loadRecords()[todayKey()] || {};
-  if (!rec.in) return "in";
-  if (!rec.out) return "out";
-  return "done";
+  return rec.in ? "out" : "in";
 }
 
 function renderPunchButtons() {
@@ -202,10 +203,10 @@ function renderPunchButtons() {
   const verified = qrVerified();
   const mode = nextPunchMode();
 
-  els.punchBtn.classList.remove("in", "out", "done");
+  els.punchBtn.classList.remove("in", "out");
   els.punchBtn.classList.add(mode);
-  els.punchBtn.textContent = mode === "in" ? "出勤" : mode === "out" ? "退勤" : "退勤済";
-  els.punchBtn.disabled = mode === "done" || !hasName || !verified;
+  els.punchBtn.textContent = mode === "in" ? "出勤" : "退勤";
+  els.punchBtn.disabled = !hasName || !verified;
 }
 
 // QRゲートの案内表示（認証済みなら残り時間、未認証なら読み取り案内）
@@ -268,6 +269,7 @@ function renderHistory() {
 }
 
 // 1ボタン自動判定: 未出勤なら出勤、出勤済みなら退勤として記録
+// 退勤は何度でも押し直せる（最後の打刻がシートに採用される）
 els.punchBtn.addEventListener("click", () => {
   const now = new Date();
   const records = loadRecords();
@@ -280,12 +282,15 @@ els.punchBtn.addEventListener("click", () => {
     saveRecords(records);
     sendPunch(getName(), "in", now);
     showMessage(`おはようございます。${timeLabel(records[key].in)} 出勤を記録しました`);
-  } else if (mode === "out") {
-    records[key].out = now.toISOString();
+  } else {
+    const isUpdate = !!records[key].out;
+    records[key].out = now.toISOString(); // 押し直しは常に最新で上書き
     saveRecords(records);
     sendPunch(getName(), "out", now);
     const r = calcDay(toMinutes(new Date(records[key].in)), toMinutes(now));
-    let text = `お疲れさまでした。実働 ${formatMinutes(r.work)}`;
+    let text = isUpdate
+      ? `退勤を ${timeLabel(records[key].out)} に更新しました。実働 ${formatMinutes(r.work)}`
+      : `お疲れさまでした。実働 ${formatMinutes(r.work)}`;
     if (r.overtime > 0) text += `（残業 ${formatMinutes(r.overtime)}）`;
     showMessage(text);
   }
