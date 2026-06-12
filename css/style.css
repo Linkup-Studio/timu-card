@@ -1,13 +1,24 @@
+/* ============================================
+   timu-card 和モダンテーマ
+   墨色の背景 × 生成りの紙 × 朱色の判子
+   ============================================ */
+
 :root {
-  --bg: #f4f6f9;
-  --card: #ffffff;
-  --text: #1f2a37;
-  --sub: #6b7280;
-  --primary: #2563eb;
-  --in: #059669;
-  --out: #ea580c;
-  --border: #e5e7eb;
-  --radius: 16px;
+  /* 和の色 */
+  --sumi: #16181c;        /* 墨 — 背景 */
+  --sumi-2: #1e2127;      /* 墨（淡） — カード */
+  --kinari: #f3efe4;      /* 生成り — 紙 */
+  --kinari-dim: #b9b4a5;  /* 生成り（淡） — 補助文字 */
+  --ink: #26282e;         /* 紙の上の文字 */
+  --ink-sub: #6e6a5e;     /* 紙の上の補助文字 */
+  --shu: #b3402f;         /* 朱 — 出勤・印 */
+  --shu-bright: #c84b38;
+  --ai: #32465c;          /* 藍鉄 — 退勤 */
+  --rokusho: #3d6a58;     /* 緑青 — 認証済み */
+  --gold: #b69256;
+  --line-dark: rgba(243, 239, 228, 0.14);
+  --line-paper: rgba(38, 40, 46, 0.14);
+  --radius: 6px;
 }
 
 * {
@@ -21,9 +32,12 @@ html {
 }
 
 body {
-  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  font-family: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(243, 239, 228, 0.05), transparent 60%),
+    repeating-linear-gradient(135deg, rgba(243, 239, 228, 0.012) 0 2px, transparent 2px 6px),
+    var(--sumi);
+  color: var(--kinari);
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -32,183 +46,278 @@ body {
 .app {
   width: 100%;
   max-width: 480px;
-  padding: 20px 16px 40px;
+  padding: 28px 20px 48px;
 }
 
-/* ヘッダー */
+/* ============ ヘッダー（表札風） ============ */
 .header {
-  text-align: center;
-  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 26px;
 }
 
 .header h1 {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  color: var(--sub);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: var(--kinari);
 }
 
-/* 時計カード */
+.header .seal {
+  width: 34px;
+  height: 34px;
+  background: var(--shu);
+  color: var(--kinari);
+  font-size: 1.05rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transform: rotate(-4deg);
+  box-shadow: 0 2px 8px rgba(179, 64, 47, 0.35);
+}
+
+.header .subtitle {
+  display: none;
+}
+
+/* ============ 時計（行灯風） ============ */
 .clock-card {
-  background: var(--card);
+  background: var(--sumi-2);
+  border: 1px solid var(--line-dark);
   border-radius: var(--radius);
-  padding: 24px 16px;
+  padding: 26px 16px 30px;
   text-align: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  position: relative;
+}
+
+/* 四隅の飾り（額縁の角金具イメージ） */
+.clock-card::before,
+.clock-card::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.7;
+}
+
+.clock-card::before {
+  top: 6px;
+  left: 6px;
+  border-width: 1px 0 0 1px;
+}
+
+.clock-card::after {
+  bottom: 6px;
+  right: 6px;
+  border-width: 0 1px 1px 0;
 }
 
 .date {
-  font-size: 0.95rem;
-  color: var(--sub);
-  margin-bottom: 4px;
+  font-size: 0.92rem;
+  letter-spacing: 0.18em;
+  color: var(--kinari-dim);
+  margin-bottom: 10px;
 }
 
 .clock {
-  font-size: 3.2rem;
-  font-weight: 700;
+  font-size: 3.6rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  color: var(--kinari);
+  line-height: 1;
 }
 
 .clock .sec {
-  font-size: 1.6rem;
-  color: var(--sub);
+  font-size: 1.7rem;
+  color: var(--kinari-dim);
 }
 
-/* QRゲート状態 */
+/* ============ QRゲート札 ============ */
 .qr-notice {
-  background: #fef3c7;
-  border: 1px solid #fcd34d;
-  color: #92400e;
+  background: var(--sumi-2);
+  border: 1px solid var(--line-dark);
+  border-left: 3px solid var(--shu);
   border-radius: var(--radius);
   padding: 14px 16px;
   text-align: center;
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 16px;
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+  color: var(--kinari-dim);
+  margin-bottom: 18px;
 }
 
 .qr-notice.verified {
-  background: #d1fae5;
-  border-color: #6ee7b7;
-  color: #065f46;
+  border-left-color: var(--rokusho);
+  color: #9fc4b4;
   font-variant-numeric: tabular-nums;
 }
 
-/* 名前 */
+/* ============ 名前（木札風） ============ */
 .name-card {
-  background: var(--card);
+  background: var(--sumi-2);
+  border: 1px solid var(--line-dark);
   border-radius: var(--radius);
   padding: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .name-card label {
   display: block;
-  font-size: 0.85rem;
-  color: var(--sub);
-  margin-bottom: 8px;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  color: var(--kinari-dim);
+  margin-bottom: 10px;
 }
 
 .name-card input {
   width: 100%;
+  font-family: inherit;
   font-size: 1.1rem;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
+  padding: 12px 14px;
+  border: 1px solid var(--line-dark);
+  border-radius: var(--radius);
+  background: var(--sumi);
+  color: var(--kinari);
+}
+
+.name-card input::placeholder {
+  color: rgba(185, 180, 165, 0.45);
 }
 
 .name-display {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
 }
 
 .name-display .name {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
+  letter-spacing: 0.2em;
 }
 
 .name-display button {
-  font-size: 0.8rem;
-  color: var(--sub);
+  font-family: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  color: var(--kinari-dim);
   background: none;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 12px;
+  border: 1px solid var(--line-dark);
+  border-radius: var(--radius);
+  padding: 6px 14px;
 }
 
 .btn-save-name {
   width: 100%;
-  margin-top: 12px;
-  font-size: 1rem;
+  margin-top: 14px;
+  font-family: inherit;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: #fff;
-  background: var(--primary);
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--kinari);
+  background: var(--ai);
   border: none;
-  border-radius: 10px;
-  padding: 12px;
+  border-radius: var(--radius);
+  padding: 13px;
 }
 
-/* 打刻ボタン */
+/* ============ 打刻ボタン（朱印・藍印） ============ */
 .punch-row {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  justify-content: center;
+  gap: 36px;
+  margin: 26px 0 18px;
 }
 
 .punch-btn {
-  flex: 1;
-  font-size: 1.3rem;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  font-family: inherit;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  padding: 28px 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-  transition: transform 0.08s, opacity 0.2s;
+  letter-spacing: 0.1em;
+  color: var(--kinari);
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.08s, opacity 0.25s, box-shadow 0.25s;
 }
 
 .punch-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.95);
 }
 
-.punch-btn.in { background: var(--in); }
-.punch-btn.out { background: var(--out); }
+/* 出勤 = 朱の印 */
+.punch-btn.in {
+  background: radial-gradient(circle at 35% 30%, var(--shu-bright), var(--shu) 70%);
+  border: 1px solid rgba(243, 239, 228, 0.25);
+  box-shadow:
+    0 0 0 4px var(--sumi),
+    0 0 0 5px rgba(179, 64, 47, 0.55),
+    0 6px 20px rgba(179, 64, 47, 0.3);
+}
+
+/* 退勤 = 藍の印 */
+.punch-btn.out {
+  background: radial-gradient(circle at 35% 30%, #3e5570, var(--ai) 70%);
+  border: 1px solid rgba(243, 239, 228, 0.25);
+  box-shadow:
+    0 0 0 4px var(--sumi),
+    0 0 0 5px rgba(50, 70, 92, 0.65),
+    0 6px 20px rgba(50, 70, 92, 0.35);
+}
 
 .punch-btn:disabled {
-  opacity: 0.35;
+  opacity: 0.28;
+  filter: grayscale(0.5);
   box-shadow: none;
 }
 
-/* メッセージ */
+/* ============ メッセージ ============ */
 .message {
   text-align: center;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--primary);
-  min-height: 1.4em;
-  margin-bottom: 16px;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  color: var(--shu-bright);
+  min-height: 1.5em;
+  margin-bottom: 18px;
 }
 
-/* 本日の状況 */
+/* ============ 本日の記録・履歴（紙のカード） ============ */
 .status-card,
 .history-card {
-  background: var(--card);
+  background:
+    repeating-linear-gradient(0deg, rgba(38, 40, 46, 0.015) 0 1px, transparent 1px 3px),
+    var(--kinari);
+  color: var(--ink);
   border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  margin-bottom: 16px;
+  padding: 18px 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
 .status-card h2,
 .history-card h2 {
-  font-size: 0.9rem;
-  color: var(--sub);
-  margin-bottom: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  color: var(--ink-sub);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-paper);
 }
 
 .status-grid {
@@ -218,56 +327,62 @@ body {
 }
 
 .status-item {
-  background: var(--bg);
-  border-radius: 10px;
-  padding: 10px;
+  border: 1px solid var(--line-paper);
+  border-radius: var(--radius);
+  padding: 10px 8px;
   text-align: center;
 }
 
 .status-item .label {
-  font-size: 0.75rem;
-  color: var(--sub);
-  margin-bottom: 2px;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: var(--ink-sub);
+  margin-bottom: 4px;
 }
 
 .status-item .value {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 /* 履歴 */
 .history-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
 }
 
 .history-table th {
   font-weight: 600;
-  color: var(--sub);
+  letter-spacing: 0.08em;
+  color: var(--ink-sub);
   text-align: left;
   padding: 6px 4px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line-paper);
 }
 
 .history-table td {
-  padding: 8px 4px;
-  border-bottom: 1px solid var(--border);
+  padding: 9px 4px;
+  border-bottom: 1px dashed var(--line-paper);
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 .history-empty {
-  font-size: 0.85rem;
-  color: var(--sub);
+  font-size: 0.84rem;
+  color: var(--ink-sub);
   text-align: center;
-  padding: 12px 0;
+  padding: 14px 0;
 }
 
+/* ============ フッター ============ */
 .footer-note {
   text-align: center;
-  font-size: 0.75rem;
-  color: var(--sub);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: rgba(185, 180, 165, 0.55);
 }
 
 .hidden {
