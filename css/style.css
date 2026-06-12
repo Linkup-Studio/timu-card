@@ -1,0 +1,255 @@
+:root {
+  --bg: #f4f6f9;
+  --card: #ffffff;
+  --text: #1f2a37;
+  --sub: #6b7280;
+  --primary: #2563eb;
+  --in: #059669;
+  --out: #ea580c;
+  --border: #e5e7eb;
+  --radius: 16px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+.app {
+  width: 100%;
+  max-width: 480px;
+  padding: 20px 16px 40px;
+}
+
+/* ヘッダー */
+.header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.header h1 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--sub);
+  letter-spacing: 0.1em;
+}
+
+/* 時計カード */
+.clock-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px 16px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
+}
+
+.date {
+  font-size: 0.95rem;
+  color: var(--sub);
+  margin-bottom: 4px;
+}
+
+.clock {
+  font-size: 3.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.clock .sec {
+  font-size: 1.6rem;
+  color: var(--sub);
+}
+
+/* 名前 */
+.name-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
+}
+
+.name-card label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--sub);
+  margin-bottom: 8px;
+}
+
+.name-card input {
+  width: 100%;
+  font-size: 1.1rem;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.name-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.name-display .name {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.name-display button {
+  font-size: 0.8rem;
+  color: var(--sub);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+.btn-save-name {
+  width: 100%;
+  margin-top: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+/* 打刻ボタン */
+.punch-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.punch-btn {
+  flex: 1;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 28px 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: transform 0.08s, opacity 0.2s;
+}
+
+.punch-btn:active {
+  transform: scale(0.97);
+}
+
+.punch-btn.in { background: var(--in); }
+.punch-btn.out { background: var(--out); }
+
+.punch-btn:disabled {
+  opacity: 0.35;
+  box-shadow: none;
+}
+
+/* メッセージ */
+.message {
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary);
+  min-height: 1.4em;
+  margin-bottom: 16px;
+}
+
+/* 本日の状況 */
+.status-card,
+.history-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
+}
+
+.status-card h2,
+.history-card h2 {
+  font-size: 0.9rem;
+  color: var(--sub);
+  margin-bottom: 12px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.status-item {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+}
+
+.status-item .label {
+  font-size: 0.75rem;
+  color: var(--sub);
+  margin-bottom: 2px;
+}
+
+.status-item .value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 履歴 */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.history-table th {
+  font-weight: 600;
+  color: var(--sub);
+  text-align: left;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-table td {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
+.history-empty {
+  font-size: 0.85rem;
+  color: var(--sub);
+  text-align: center;
+  padding: 12px 0;
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--sub);
+}
+
+.hidden {
+  display: none !important;
+}

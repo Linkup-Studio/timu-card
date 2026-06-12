@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>タイムカード | timu-card</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>タイムカード</h1>
+    </header>
+
+    <!-- 時計 -->
+    <section class="clock-card">
+      <div class="date" id="date"></div>
+      <div class="clock" id="clock"></div>
+    </section>
+
+    <!-- 名前 -->
+    <section class="name-card">
+      <div id="name-edit">
+        <label for="name-input">お名前（最初に1回だけ登録）</label>
+        <input type="text" id="name-input" placeholder="例：山田 太郎" autocomplete="name">
+        <button class="btn-save-name" id="save-name">登録する</button>
+      </div>
+      <div id="name-view" class="name-display hidden">
+        <span class="name" id="name-text"></span>
+        <button id="change-name">変更</button>
+      </div>
+    </section>
+
+    <!-- 打刻ボタン -->
+    <div class="punch-row">
+      <button class="punch-btn in" id="punch-in">出勤</button>
+      <button class="punch-btn out" id="punch-out">退勤</button>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <!-- 本日の状況 -->
+    <section class="status-card">
+      <h2>本日の記録</h2>
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="label">出勤</div>
+          <div class="value" id="status-in">--:--</div>
+        </div>
+        <div class="status-item">
+          <div class="label">退勤</div>
+          <div class="value" id="status-out">--:--</div>
+        </div>
+        <div class="status-item">
+          <div class="label">実働</div>
+          <div class="value" id="status-work">--:--</div>
+        </div>
+        <div class="status-item">
+          <div class="label">早出 / 残業</div>
+          <div class="value" id="status-extra">--</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 履歴 -->
+    <section class="history-card">
+      <h2>打刻履歴（直近2週間）</h2>
+      <table class="history-table">
+        <thead>
+          <tr><th>日付</th><th>出勤</th><th>退勤</th><th>実働</th><th>早出/残業</th></tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+      <div class="history-empty" id="history-empty">まだ記録がありません</div>
+    </section>
+
+    <p class="footer-note">定時 8:00〜17:00 ／ 休憩 12:00〜13:00 ／ 早出・残業は15分単位</p>
+  </div>
+
+  <script src="js/timecard.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
