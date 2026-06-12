@@ -76,6 +76,26 @@ body {
   color: var(--sub);
 }
 
+/* QRゲート状態 */
+.qr-notice {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.qr-notice.verified {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  color: #065f46;
+  font-variant-numeric: tabular-nums;
+}
+
 /* 名前 */
 .name-card {
   background: var(--card);

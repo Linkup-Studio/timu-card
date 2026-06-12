@@ -8,10 +8,14 @@
 // Google Apps Script Web App のURL（スプレッドシート連携時に設定する）
 const GAS_URL = "";
 
+// QRゲート: QR読み取り後に打刻を許可する時間（ミリ秒）
+const QR_VALID_MS = 5 * 60 * 1000;
+
 // ===== ストレージ =====
 const KEY_NAME = "timu_name";
 const KEY_RECORDS = "timu_records"; // { "YYYY-MM-DD": { in: ISO, out: ISO } }
 const KEY_PENDING = "timu_pending"; // GAS送信待ちキュー
+const KEY_QR_UNTIL = "timu_qr_until"; // QR認証の有効期限（sessionStorage）
 
 function loadRecords() {
   try {
@@ -72,8 +76,29 @@ function sendPunch(name, type, date) {
     type, // "in" | "out"
     date: todayKey(date),
     time: date.toISOString(),
+    qr: true, // QRゲート通過済みの打刻（ゲートなしでは打刻ボタンが押せない）
   });
   flushPending();
+}
+
+// ===== QRゲート =====
+// 会社に掲示したワンタイムQR（display.html）を読み取らないと打刻できない
+function qrVerified() {
+  return Number(sessionStorage.getItem(KEY_QR_UNTIL) || 0) > Date.now();
+}
+
+async function initQrGate() {
+  const token = new URLSearchParams(location.search).get("t");
+  if (!token) return;
+
+  const ok = await isValidToken(TIMU_SECRET, token, Date.now());
+  if (ok) {
+    sessionStorage.setItem(KEY_QR_UNTIL, String(Date.now() + QR_VALID_MS));
+  } else {
+    showMessage("QRコードの有効期限が切れています。最新のQRを読み取り直してください");
+  }
+  // トークン付きURLをブックマークさせないため、アドレスバーから消す
+  history.replaceState(null, "", location.pathname);
 }
 
 // ===== DOM =====
@@ -82,6 +107,8 @@ const $ = (id) => document.getElementById(id);
 const els = {
   date: $("date"),
   clock: $("clock"),
+  qrNotice: $("qr-notice"),
+  qrRemain: $("qr-remain"),
   nameEdit: $("name-edit"),
   nameView: $("name-view"),
   nameInput: $("name-input"),
@@ -165,9 +192,24 @@ function timeLabel(iso) {
 
 function renderPunchButtons() {
   const hasName = !!getName() && els.nameView.classList.contains("hidden") === false;
+  const verified = qrVerified();
   const rec = loadRecords()[todayKey()] || {};
-  els.punchIn.disabled = !hasName || !!rec.in;
-  els.punchOut.disabled = !hasName || !rec.in || !!rec.out;
+  els.punchIn.disabled = !hasName || !verified || !!rec.in;
+  els.punchOut.disabled = !hasName || !verified || !rec.in || !!rec.out;
+}
+
+// QRゲートの案内表示（認証済みなら残り時間、未認証なら読み取り案内）
+function renderQrNotice() {
+  const verified = qrVerified();
+  els.qrNotice.classList.toggle("verified", verified);
+  if (verified) {
+    const remainSec = Math.ceil((Number(sessionStorage.getItem(KEY_QR_UNTIL)) - Date.now()) / 1000);
+    const mm = Math.floor(remainSec / 60);
+    const ss = String(remainSec % 60).padStart(2, "0");
+    els.qrRemain.textContent = `✅ QR認証済み（あと ${mm}:${ss} 打刻できます）`;
+  } else {
+    els.qrRemain.textContent = "🔒 会社のQRコードを読み取ると打刻できます";
+  }
 }
 
 function renderStatus() {
@@ -249,9 +291,18 @@ function renderAll() {
   renderName();
   renderStatus();
   renderHistory();
+  renderQrNotice();
 }
 
-tickClock();
-setInterval(tickClock, 1000);
-renderAll();
-flushPending();
+(async () => {
+  tickClock();
+  setInterval(tickClock, 1000);
+  await initQrGate();
+  renderAll();
+  // QR認証の期限切れを即時反映する（残り時間表示とボタン状態）
+  setInterval(() => {
+    renderQrNotice();
+    renderPunchButtons();
+  }, 1000);
+  flushPending();
+})();

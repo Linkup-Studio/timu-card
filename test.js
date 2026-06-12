@@ -86,5 +86,32 @@ try {
   console.log("  ✅ 退勤<出勤はエラー");
 }
 
-console.log(`\n結果: ${passed} passed, ${failed} failed`);
-process.exit(failed > 0 ? 1 : 0);
+// ===== ワンタイムQRトークン =====
+const { TOKEN_RULES, makeToken, isValidToken, msUntilNextWindow } = require("./js/token.js");
+
+(async () => {
+  console.log("【QRトークン】60秒窓・現在窓＋1つ前まで有効");
+  const SECRET = "test-secret";
+  const WIN_MS = TOKEN_RULES.WINDOW_SEC * 1000;
+  const T = Math.floor(1_750_000_000_000 / WIN_MS) * WIN_MS; // 固定時刻（窓の先頭に揃えて決定的に）
+
+  const token = await makeToken(SECRET, T);
+  eq("トークン長は10文字", token.length, TOKEN_RULES.TOKEN_LEN);
+  eq("同じ窓内なら同じトークン", await makeToken(SECRET, T + WIN_MS - 1000), token);
+  eq("窓が変わればトークンも変わる", (await makeToken(SECRET, T + WIN_MS)) !== token, true);
+  eq("シークレットが違えばトークンも違う", (await makeToken("other", T)) !== token, true);
+
+  eq("現在窓のトークン → 有効", await isValidToken(SECRET, token, T), true);
+  eq("1つ前の窓のトークン → 有効（猶予）", await isValidToken(SECRET, token, T + WIN_MS), true);
+  eq("2つ前の窓のトークン → 無効（期限切れ）", await isValidToken(SECRET, token, T + WIN_MS * 2), false);
+  eq("デタラメなトークン → 無効", await isValidToken(SECRET, "aaaaaaaaaa", T), false);
+  eq("空トークン → 無効", await isValidToken(SECRET, "", T), false);
+  eq("別シークレットで生成したトークン → 無効", await isValidToken(SECRET, await makeToken("other", T), T), false);
+
+  console.log("【QRトークン】窓の残り時間");
+  eq("窓の開始直後 → 残りほぼ60秒", msUntilNextWindow(T - (T % WIN_MS)), WIN_MS);
+  eq("窓の終わり1秒前 → 残り1秒", msUntilNextWindow(T - (T % WIN_MS) + WIN_MS - 1000), 1000);
+
+  console.log(`\n結果: ${passed} passed, ${failed} failed`);
+  process.exit(failed > 0 ? 1 : 0);
+})();
