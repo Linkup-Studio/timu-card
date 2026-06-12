@@ -240,8 +240,8 @@ body {
 }
 
 .punch-btn {
-  width: 132px;
-  height: 132px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   font-family: inherit;
   font-size: 1.6rem;
@@ -280,10 +280,24 @@ body {
     0 6px 20px rgba(50, 70, 92, 0.35);
 }
 
+/* 退勤済 = 役目を終えた印 */
+.punch-btn.done {
+  background: var(--sumi-2);
+  border: 1px dashed var(--line-dark);
+  color: var(--kinari-dim);
+  font-size: 1.15rem;
+  box-shadow: none;
+}
+
 .punch-btn:disabled {
   opacity: 0.28;
   filter: grayscale(0.5);
   box-shadow: none;
+}
+
+.punch-btn.done:disabled {
+  opacity: 0.8;
+  filter: none;
 }
 
 /* ============ メッセージ ============ */

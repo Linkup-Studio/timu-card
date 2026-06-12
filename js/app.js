@@ -115,8 +115,7 @@ const els = {
   nameText: $("name-text"),
   saveName: $("save-name"),
   changeName: $("change-name"),
-  punchIn: $("punch-in"),
-  punchOut: $("punch-out"),
+  punchBtn: $("punch-btn"),
   message: $("message"),
   statusIn: $("status-in"),
   statusOut: $("status-out"),
@@ -190,12 +189,23 @@ function timeLabel(iso) {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
+/** 今日の状態から次の打刻種別を判定: "in"=出勤待ち / "out"=退勤待ち / "done"=完了 */
+function nextPunchMode() {
+  const rec = loadRecords()[todayKey()] || {};
+  if (!rec.in) return "in";
+  if (!rec.out) return "out";
+  return "done";
+}
+
 function renderPunchButtons() {
   const hasName = !!getName() && els.nameView.classList.contains("hidden") === false;
   const verified = qrVerified();
-  const rec = loadRecords()[todayKey()] || {};
-  els.punchIn.disabled = !hasName || !verified || !!rec.in;
-  els.punchOut.disabled = !hasName || !verified || !rec.in || !!rec.out;
+  const mode = nextPunchMode();
+
+  els.punchBtn.classList.remove("in", "out", "done");
+  els.punchBtn.classList.add(mode);
+  els.punchBtn.textContent = mode === "in" ? "出勤" : mode === "out" ? "退勤" : "退勤済";
+  els.punchBtn.disabled = mode === "done" || !hasName || !verified;
 }
 
 // QRゲートの案内表示（認証済みなら残り時間、未認証なら読み取り案内）
@@ -257,32 +267,28 @@ function renderHistory() {
   els.historyEmpty.classList.toggle("hidden", rows.length > 0);
 }
 
-els.punchIn.addEventListener("click", () => {
+// 1ボタン自動判定: 未出勤なら出勤、出勤済みなら退勤として記録
+els.punchBtn.addEventListener("click", () => {
   const now = new Date();
   const records = loadRecords();
   const key = todayKey(now);
-  records[key] = records[key] || {};
-  if (records[key].in) return;
-  records[key].in = now.toISOString();
-  saveRecords(records);
-  sendPunch(getName(), "in", now);
-  showMessage(`おはようございます。${timeLabel(records[key].in)} 出勤を記録しました`);
-  renderAll();
-});
+  const mode = nextPunchMode();
 
-els.punchOut.addEventListener("click", () => {
-  const now = new Date();
-  const records = loadRecords();
-  const key = todayKey(now);
-  if (!records[key] || !records[key].in || records[key].out) return;
-  records[key].out = now.toISOString();
-  saveRecords(records);
-  sendPunch(getName(), "out", now);
-
-  const r = calcDay(toMinutes(new Date(records[key].in)), toMinutes(now));
-  let text = `お疲れさまでした。実働 ${formatMinutes(r.work)}`;
-  if (r.overtime > 0) text += `（残業 ${formatMinutes(r.overtime)}）`;
-  showMessage(text);
+  if (mode === "in") {
+    records[key] = records[key] || {};
+    records[key].in = now.toISOString();
+    saveRecords(records);
+    sendPunch(getName(), "in", now);
+    showMessage(`おはようございます。${timeLabel(records[key].in)} 出勤を記録しました`);
+  } else if (mode === "out") {
+    records[key].out = now.toISOString();
+    saveRecords(records);
+    sendPunch(getName(), "out", now);
+    const r = calcDay(toMinutes(new Date(records[key].in)), toMinutes(now));
+    let text = `お疲れさまでした。実働 ${formatMinutes(r.work)}`;
+    if (r.overtime > 0) text += `（残業 ${formatMinutes(r.overtime)}）`;
+    showMessage(text);
+  }
   renderAll();
 });
 
