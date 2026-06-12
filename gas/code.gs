@@ -64,6 +64,15 @@ function doGet(e) {
     aggregateMonth(Number(m[1]), Number(m[2]));
     return ContentService.createTextOutput("aggregate OK: " + p.aggregate);
   }
+  // /exec?cleanlog=氏名&key=SECRET で打刻ログから該当氏名の行を削除（cleanlog=all で全行）
+  if (p.cleanlog && p.key === SECRET) {
+    const n = cleanLog_(String(p.cleanlog));
+    return ContentService.createTextOutput("cleanlog OK: " + n + "行削除");
+  }
+  // /exec?cleargrid=YYYY-MM-DD&name=氏名&key=SECRET でカレンダーの該当セル（出勤・退勤）をクリア
+  if (p.cleargrid && p.name && p.key === SECRET) {
+    return ContentService.createTextOutput(clearGridCells_(String(p.cleargrid), String(p.name)));
+  }
   return ContentService.createTextOutput("timu-card API OK");
 }
 
@@ -361,6 +370,40 @@ function aggregateMonth(year, month) {
   results.forEach(function (r) {
     outSheet.appendRow([label, r.name, r.t.days, toHours(r.t.work), toHours(r.t.early), toHours(r.t.overtime), r.t.broken, new Date()]);
   });
+}
+
+// ===== 管理機能（doGetからkey付きで呼ばれる） =====
+
+/** 打刻ログから指定氏名の行を削除（"all"で全行）。削除した行数を返す */
+function cleanLog_(target) {
+  const sheet = getOrCreateSheet_(openTimecard_(), SHEET_LOG, LOG_HEADERS);
+  const rows = sheet.getDataRange().getDisplayValues();
+  let count = 0;
+  for (let i = rows.length - 1; i >= 1; i--) {
+    if (target === "all" || rows[i][1].trim() === target) {
+      sheet.deleteRow(i + 1);
+      count++;
+    }
+  }
+  return count;
+}
+
+/** カレンダー型シートの指定日×指定氏名の出勤・退勤セルをクリア */
+function clearGridCells_(dateStr, name) {
+  const m = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!m) return "cleargrid は YYYY-MM-DD 形式で指定してください";
+  const ss = openTimecard_();
+  const sheet = findMonthSheet_(ss, Number(m[1]), Number(m[2]));
+  if (!sheet) return m[1] + "年" + m[2] + "月のシートが見つかりません";
+
+  const names = sheet.getRange(GRID.NAME_ROW, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+  for (let c = GRID.FIRST_NAME_COL - 1; c < names.length; c++) {
+    if (names[c].trim() === name.trim()) {
+      sheet.getRange(GRID.FIRST_DAY_ROW + Number(m[3]) - 1, c + 1, 1, 2).clearContent();
+      return "cleargrid OK: " + dateStr + " " + name;
+    }
+  }
+  return "氏名「" + name + "」が見つかりません";
 }
 
 // ===== トリガー登録（セットアップ時に1回だけ実行） =====

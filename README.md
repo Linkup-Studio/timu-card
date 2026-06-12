@@ -91,9 +91,16 @@ node test.js   # 28件の計算テスト
 5. 承認を済ませ、表示された **Web App URL** を `js/config.js` の `GAS_URL` に設定
 6. Apps Scriptエディタで関数 `setupMonthlyTrigger` を1回実行（月次トリガー登録）
 
-## 今後の予定（未実装）
+## 管理者用URL（keyは `js/config.js` の TIMU_SECRET）
 
-1. **打刻ミスの修正**: スプレッドシート上で管理者が直接修正する運用
+| 操作 | URL |
+|---|---|
+| 指定月の再集計 | `GAS_URL?aggregate=YYYY-MM&key=KEY` |
+| 打刻ログの行削除 | `GAS_URL?cleanlog=氏名&key=KEY`（`cleanlog=all` で全行） |
+| カレンダーのセルをクリア | `GAS_URL?cleargrid=YYYY-MM-DD&name=氏名&key=KEY` |
+| 月次トリガー登録 | `GAS_URL?setup=1` |
+
+打刻ミスの修正は、シートのセルを直接書き換えてもよい（再集計で反映される）。
 
 ## 制約・前提
 
