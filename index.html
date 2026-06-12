@@ -40,10 +40,12 @@
       </div>
     </section>
 
-    <!-- 打刻ボタン（状態に応じて出勤/退勤を自動判定） -->
-    <div class="punch-row">
+    <!-- 打刻ボタン（状態に応じて出勤/退勤を自動判定。8時前は早出ボタンも表示） -->
+    <div class="punch-row" id="punch-row">
+      <button class="punch-btn early hidden" id="punch-early">早出</button>
       <button class="punch-btn in" id="punch-btn">出勤</button>
     </div>
+    <p class="early-hint hidden" id="early-hint">8時前の打刻：早出手当の対象は「早出」／そうでなければ「出勤」（勤務は8:00から計算）</p>
 
     <div class="message" id="message"></div>
 

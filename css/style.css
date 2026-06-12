@@ -280,6 +280,32 @@ body {
     0 6px 20px rgba(50, 70, 92, 0.35);
 }
 
+/* 早出 = 金茶の印（8時前のみ表示） */
+.punch-btn.early {
+  background: radial-gradient(circle at 35% 30%, #c7a36a, var(--gold) 70%);
+  border: 1px solid rgba(243, 239, 228, 0.25);
+  box-shadow:
+    0 0 0 4px var(--sumi),
+    0 0 0 5px rgba(182, 146, 86, 0.6),
+    0 6px 20px rgba(182, 146, 86, 0.3);
+}
+
+/* 早出と出勤の2つ並ぶときは少し小さく */
+.punch-row.dual .punch-btn {
+  width: 124px;
+  height: 124px;
+  font-size: 1.45rem;
+}
+
+.early-hint {
+  text-align: center;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+  color: var(--kinari-dim);
+  margin: -6px 0 16px;
+}
+
 .punch-btn:disabled {
   opacity: 0.28;
   filter: grayscale(0.5);

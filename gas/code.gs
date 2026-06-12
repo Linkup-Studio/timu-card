@@ -154,6 +154,8 @@ function writeToGrid_(data) {
   const col = data.type === "in" ? nameCol : nameCol + 1;
   const row = GRID.FIRST_DAY_ROW + day - 1;
   const newTime = Utilities.formatDate(new Date(data.time), TZ, "HH:mm");
+  // 早出打刻は「HH:mm 早出」と記録（集計時に早出として計算される）
+  const newValue = data.type === "in" && data.early === true ? newTime + " 早出" : newTime;
   const cell = sheet.getRange(row, col);
   const existing = cell.getDisplayValue().trim();
 
@@ -163,7 +165,7 @@ function writeToGrid_(data) {
       data.type === "in" ? compareTime_(existing, newTime) <= 0 : compareTime_(existing, newTime) >= 0;
     if (keepExisting) return "既存値" + existing + "を維持";
   }
-  cell.setNumberFormat("@").setValue(newTime);
+  cell.setNumberFormat("@").setValue(newValue);
   return "記入OK";
 }
 
@@ -175,9 +177,9 @@ function compareTime_(a, b) {
   return am === bm ? 0 : am < bm ? -1 : 1;
 }
 
-/** "H:mm" → 0:00からの分。解釈できなければ null */
+/** "H:mm"（「早出」などの注記つきでも可）→ 0:00からの分。解釈できなければ null */
 function parseTimeStr_(s) {
-  const m = String(s).trim().match(/^(\d{1,2}):(\d{2})/);
+  const m = String(s).trim().match(/(\d{1,2}):(\d{2})/);
   if (!m) return null;
   return Number(m[1]) * 60 + Number(m[2]);
 }
@@ -330,14 +332,17 @@ function aggregateMonth(year, month) {
     for (let r = 0; r < daysInMonth; r++) {
       const inMin = parseTimeStr_(grid[r][c]);
       const outMin = parseTimeStr_(grid[r][c + 1]);
+      const isEarly = /早出/.test(String(grid[r][c])); // 「HH:mm 早出」= 早出打刻
       if (inMin === null && outMin === null) continue; // 休み
       if (inMin === null || outMin === null || outMin < inMin) {
         t.broken++; // 出勤・退勤がそろっていない日（シートを修正して再集計）
         continue;
       }
+      // 早出でなければ8:00前は勤務に含めない（8:00前退勤の逆転も防ぐ）
+      const effIn = isEarly ? inMin : Math.min(Math.max(inMin, RULES.START_MIN), outMin);
       t.days++;
-      t.work += outMin - inMin - calcLunchOverlap_(inMin, outMin);
-      t.early += calcEarly_(inMin);
+      t.work += outMin - effIn - calcLunchOverlap_(effIn, outMin);
+      t.early += isEarly ? calcEarly_(inMin) : 0;
       t.overtime += calcOvertime_(outMin);
     }
     results.push({ name: name, t: t });

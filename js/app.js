@@ -69,10 +69,11 @@ async function flushPending() {
   localStorage.setItem(KEY_PENDING, JSON.stringify(remaining));
 }
 
-function sendPunch(name, type, date) {
+function sendPunch(name, type, date, early) {
   queuePending({
     name,
     type, // "in" | "out"
+    early: !!early, // 早出打刻（typeがinのときのみ意味を持つ）
     date: todayKey(date),
     time: date.toISOString(),
     token: sessionStorage.getItem(KEY_QR_TOKEN) || "", // GAS側でも検証される
@@ -115,7 +116,10 @@ const els = {
   nameText: $("name-text"),
   saveName: $("save-name"),
   changeName: $("change-name"),
+  punchRow: $("punch-row"),
   punchBtn: $("punch-btn"),
+  punchEarly: $("punch-early"),
+  earlyHint: $("early-hint"),
   message: $("message"),
   statusIn: $("status-in"),
   statusOut: $("status-out"),
@@ -202,11 +206,19 @@ function renderPunchButtons() {
   const hasName = !!getName() && els.nameView.classList.contains("hidden") === false;
   const verified = qrVerified();
   const mode = nextPunchMode();
+  const disabled = !hasName || !verified;
 
   els.punchBtn.classList.remove("in", "out");
   els.punchBtn.classList.add(mode);
   els.punchBtn.textContent = mode === "in" ? "出勤" : "退勤";
-  els.punchBtn.disabled = !hasName || !verified;
+  els.punchBtn.disabled = disabled;
+
+  // 8時前の出勤打刻時だけ「早出」ボタンを並べて表示
+  const showEarly = mode === "in" && toMinutes(new Date()) < RULES.START_MIN;
+  els.punchEarly.classList.toggle("hidden", !showEarly);
+  els.earlyHint.classList.toggle("hidden", !showEarly);
+  els.punchRow.classList.toggle("dual", showEarly);
+  els.punchEarly.disabled = disabled;
 }
 
 // QRゲートの案内表示（認証済みなら残り時間、未認証なら読み取り案内）
@@ -225,11 +237,11 @@ function renderQrNotice() {
 
 function renderStatus() {
   const rec = loadRecords()[todayKey()] || {};
-  els.statusIn.textContent = timeLabel(rec.in);
+  els.statusIn.textContent = timeLabel(rec.in) + (rec.in && rec.early ? " 早" : "");
   els.statusOut.textContent = timeLabel(rec.out);
 
   if (rec.in && rec.out) {
-    const result = calcDay(toMinutes(new Date(rec.in)), toMinutes(new Date(rec.out)));
+    const result = calcDay(toMinutes(new Date(rec.in)), toMinutes(new Date(rec.out)), !!rec.early);
     els.statusWork.textContent = formatMinutes(result.work);
     const extras = [];
     if (result.early > 0) extras.push(`早出 ${formatMinutes(result.early)}`);
@@ -253,7 +265,7 @@ function renderHistory() {
       let work = "--:--";
       let extra = "";
       if (rec.in && rec.out) {
-        const r = calcDay(toMinutes(new Date(rec.in)), toMinutes(new Date(rec.out)));
+        const r = calcDay(toMinutes(new Date(rec.in)), toMinutes(new Date(rec.out)), !!rec.early);
         work = formatMinutes(r.work);
         const parts = [];
         if (r.early > 0) parts.push(`早${formatMinutes(r.early)}`);
@@ -268,6 +280,24 @@ function renderHistory() {
   els.historyEmpty.classList.toggle("hidden", rows.length > 0);
 }
 
+// 出勤打刻（isEarly=trueなら早出として記録）
+function punchIn(isEarly) {
+  const now = new Date();
+  const records = loadRecords();
+  const key = todayKey(now);
+  records[key] = records[key] || {};
+  records[key].in = now.toISOString();
+  records[key].early = !!isEarly;
+  saveRecords(records);
+  sendPunch(getName(), "in", now, isEarly);
+  showMessage(
+    isEarly
+      ? `おはようございます。早出 ${timeLabel(records[key].in)} を記録しました`
+      : `おはようございます。${timeLabel(records[key].in)} 出勤を記録しました`
+  );
+  renderAll();
+}
+
 // 1ボタン自動判定: 未出勤なら出勤、出勤済みなら退勤として記録
 // 退勤は何度でも押し直せる（最後の打刻がシートに採用される）
 els.punchBtn.addEventListener("click", () => {
@@ -277,24 +307,25 @@ els.punchBtn.addEventListener("click", () => {
   const mode = nextPunchMode();
 
   if (mode === "in") {
-    records[key] = records[key] || {};
-    records[key].in = now.toISOString();
-    saveRecords(records);
-    sendPunch(getName(), "in", now);
-    showMessage(`おはようございます。${timeLabel(records[key].in)} 出勤を記録しました`);
+    punchIn(false);
   } else {
     const isUpdate = !!records[key].out;
     records[key].out = now.toISOString(); // 押し直しは常に最新で上書き
     saveRecords(records);
     sendPunch(getName(), "out", now);
-    const r = calcDay(toMinutes(new Date(records[key].in)), toMinutes(now));
+    const r = calcDay(toMinutes(new Date(records[key].in)), toMinutes(now), !!records[key].early);
     let text = isUpdate
       ? `退勤を ${timeLabel(records[key].out)} に更新しました。実働 ${formatMinutes(r.work)}`
       : `お疲れさまでした。実働 ${formatMinutes(r.work)}`;
     if (r.overtime > 0) text += `（残業 ${formatMinutes(r.overtime)}）`;
     showMessage(text);
+    renderAll();
   }
-  renderAll();
+});
+
+els.punchEarly.addEventListener("click", () => {
+  if (nextPunchMode() !== "in") return;
+  punchIn(true);
 });
 
 // ===== 初期化 =====

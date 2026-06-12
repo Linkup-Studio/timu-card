@@ -43,21 +43,21 @@ eq("8:00〜11:00（午前のみ）→ 0分", calcLunchOverlap(min(8), min(11)), 
 eq("13:00〜17:00（午後のみ）→ 0分", calcLunchOverlap(min(13), min(17)), 0);
 eq("12:15〜12:45（休憩内のみ）→ 30分", calcLunchOverlap(min(12, 15), min(12, 45)), 30);
 
-console.log("【1日計算】実働＝退勤−出勤−休憩");
+console.log("【1日計算】実働＝退勤−出勤−休憩（早出フラグなし: 8:00前は勤務に含めない）");
 eq(
   "定時どおり 8:00〜17:00 → 実働480分(8h)・早出0・残業0",
   calcDay(min(8), min(17)),
   { work: 480, early: 0, overtime: 0, lunch: 60 }
 );
 eq(
-  "7:40〜17:50 → 実働550分・早出15・残業45",
+  "7:40に通常出勤〜17:50 → 勤務は8:00から。実働530分・早出0・残業45",
   calcDay(min(7, 40), min(17, 50)),
-  { work: 550, early: 15, overtime: 45, lunch: 60 }
+  { work: 530, early: 0, overtime: 45, lunch: 60 }
 );
 eq(
-  "7:00〜19:00 → 実働660分(11h)・早出60・残業120",
+  "7:00に通常出勤〜19:00 → 勤務は8:00から。実働600分・早出0・残業120",
   calcDay(min(7), min(19)),
-  { work: 660, early: 60, overtime: 120, lunch: 60 }
+  { work: 600, early: 0, overtime: 120, lunch: 60 }
 );
 eq(
   "9:00〜16:00（遅刻・早退）→ 実働360分・早出0・残業0",
@@ -68,6 +68,28 @@ eq(
   "8:00〜12:00（午前のみ）→ 実働240分・休憩控除なし",
   calcDay(min(8), min(12)),
   { work: 240, early: 0, overtime: 0, lunch: 0 }
+);
+eq(
+  "6:00〜7:30（通常出勤で8:00前退勤）→ 実働0分",
+  calcDay(min(6), min(7, 30)),
+  { work: 0, early: 0, overtime: 0, lunch: 0 }
+);
+
+console.log("【1日計算】早出フラグあり: 打刻時刻から勤務・早出を計上");
+eq(
+  "7:40に早出〜17:50 → 実働550分・早出15・残業45",
+  calcDay(min(7, 40), min(17, 50), true),
+  { work: 550, early: 15, overtime: 45, lunch: 60 }
+);
+eq(
+  "7:00に早出〜19:00 → 実働660分(11h)・早出60・残業120",
+  calcDay(min(7), min(19), true),
+  { work: 660, early: 60, overtime: 120, lunch: 60 }
+);
+eq(
+  "8:30に早出指定（8:00以降なので早出なし）→ 通常と同じ",
+  calcDay(min(8, 30), min(17), true),
+  { work: 450, early: 0, overtime: 0, lunch: 60 }
 );
 
 console.log("【表示】formatMinutes");

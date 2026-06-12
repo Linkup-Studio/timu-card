@@ -54,17 +54,20 @@ function calcLunchOverlap(inMin, outMin) {
  * 1日分の勤怠を計算
  * @param {number} inMin  出勤時刻（0:00からの分）
  * @param {number} outMin 退勤時刻（0:00からの分）
+ * @param {boolean} isEarly 早出打刻か。falseの場合、8:00前の出勤は8:00から勤務扱い・早出なし
  * @returns {{ work: number, early: number, overtime: number, lunch: number }}
  *          work=実働（休憩控除後・分）, early=早出（分）, overtime=残業（分）
  */
-function calcDay(inMin, outMin) {
+function calcDay(inMin, outMin, isEarly = false) {
   if (outMin < inMin) {
     throw new Error("退勤時刻が出勤時刻より前です");
   }
-  const lunch = calcLunchOverlap(inMin, outMin);
+  // 早出でなければ8:00より前は勤務に含めない（8:00前退勤の場合の逆転も防ぐ）
+  const effIn = isEarly ? inMin : Math.min(Math.max(inMin, RULES.START_MIN), outMin);
+  const lunch = calcLunchOverlap(effIn, outMin);
   return {
-    work: outMin - inMin - lunch,
-    early: calcEarly(inMin),
+    work: outMin - effIn - lunch,
+    early: isEarly ? calcEarly(inMin) : 0,
     overtime: calcOvertime(outMin),
     lunch,
   };
