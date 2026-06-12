@@ -34,7 +34,12 @@ const MONTHLY_HEADERS = ["対象月", "氏名", "出勤日数", "実働合計(h)
 
 // ===== Webアプリ入口 =====
 
-function doGet() {
+function doGet(e) {
+  // /exec?setup=1 にアクセスすると月次トリガーを登録（セットアップ用）
+  if (e && e.parameter && e.parameter.setup === "1") {
+    setupMonthlyTrigger();
+    return ContentService.createTextOutput("monthly trigger OK");
+  }
   return ContentService.createTextOutput("timu-card API OK");
 }
 
