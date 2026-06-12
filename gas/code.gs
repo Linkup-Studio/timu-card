@@ -3,11 +3,10 @@
  *
  * セットアップ手順は リポジトリの README.md を参照。
  *
- * 機能:
- * - doPost: 打刻を受信して
- *     1. このスクリプトが紐づくシステム用シートの「打刻ログ」に生ログを記録（QR検証の監査用）
- *     2. 運用スプレッドシート（カレンダー型タイムカード）の該当セルに時刻を記入
- * - monthlyAggregate: 前月の就業時間を運用スプレッドシートの「月次集計」に出力（毎月1日トリガー）
+ * スプレッドシート「タイムカード記録」1冊にすべて集約:
+ * - カレンダー型シート（月ごと） … 打刻が日付×氏名のセルに記入される
+ * - 打刻ログ … 生ログ（QR検証○×つき・監査用）
+ * - 月次集計 … 毎月1日トリガーで前月分を自動出力
  *   ※集計はカレンダー型シートを読むので、管理者がセルを直接修正すればそのまま反映される
  * - setupMonthlyTrigger: 月次トリガーの登録（最初に1回だけ実行する）
  */
@@ -82,8 +81,8 @@ function doPost(e) {
       gridNote = "グリッド記入エラー: " + String(err);
     }
 
-    // 2. 生ログ（監査用・このスクリプトが紐づくシステム用シート）
-    const sheet = getOrCreateSheet_(SpreadsheetApp.getActiveSpreadsheet(), SHEET_LOG, LOG_HEADERS);
+    // 2. 生ログ（監査用・同じスプレッドシートの「打刻ログ」タブ）
+    const sheet = getOrCreateSheet_(openTimecard_(), SHEET_LOG, LOG_HEADERS);
     sheet.appendRow([
       data.date,
       data.name,
@@ -345,11 +344,12 @@ function aggregateMonth(year, month) {
   }
 
   // 同月の既存行を消してから書き込み（再実行に対応）
+  // ※「2026年6月」はシートに日付型として解釈されることがあるため、表示値で比較する
   const outSheet = getOrCreateSheet_(ss, SHEET_MONTHLY, MONTHLY_HEADERS);
   const label = year + "年" + month + "月";
-  const existing = outSheet.getDataRange().getValues();
+  const existing = outSheet.getDataRange().getDisplayValues();
   for (let i = existing.length - 1; i >= 1; i--) {
-    if (String(existing[i][0]) === label) outSheet.deleteRow(i + 1);
+    if (existing[i][0].trim() === label) outSheet.deleteRow(i + 1);
   }
 
   const toHours = function (min) { return Math.round((min / 60) * 100) / 100; };
