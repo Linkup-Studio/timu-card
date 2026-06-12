@@ -4,3 +4,9 @@
  * （変更するとそれまでのQR表示端末・アプリ両方の再読み込みが必要）
  */
 const TIMU_SECRET = "323a470aa3d2c6166a7aa6325941548f";
+
+/**
+ * GAS_URL: Google Apps Script Web App のURL（スプレッドシート連携）
+ * 空文字の間は送信せず、打刻は端末内のキューに保存される
+ */
+const GAS_URL = "";

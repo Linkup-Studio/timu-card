@@ -4,9 +4,7 @@
  * - GAS_URL を設定するとスプレッドシートにも送信（未設定なら送信スキップ）
  */
 
-// ===== 設定 =====
-// Google Apps Script Web App のURL（スプレッドシート連携時に設定する）
-const GAS_URL = "";
+// 設定（TIMU_SECRET / GAS_URL）は js/config.js にある
 
 // QRゲート: QR読み取り後に打刻を許可する時間（ミリ秒）
 const QR_VALID_MS = 5 * 60 * 1000;
@@ -16,6 +14,7 @@ const KEY_NAME = "timu_name";
 const KEY_RECORDS = "timu_records"; // { "YYYY-MM-DD": { in: ISO, out: ISO } }
 const KEY_PENDING = "timu_pending"; // GAS送信待ちキュー
 const KEY_QR_UNTIL = "timu_qr_until"; // QR認証の有効期限（sessionStorage）
+const KEY_QR_TOKEN = "timu_qr_token"; // 認証に使ったトークン（GASでのサーバー側検証用）
 
 function loadRecords() {
   try {
@@ -76,7 +75,7 @@ function sendPunch(name, type, date) {
     type, // "in" | "out"
     date: todayKey(date),
     time: date.toISOString(),
-    qr: true, // QRゲート通過済みの打刻（ゲートなしでは打刻ボタンが押せない）
+    token: sessionStorage.getItem(KEY_QR_TOKEN) || "", // GAS側でも検証される
   });
   flushPending();
 }
@@ -94,6 +93,7 @@ async function initQrGate() {
   const ok = await isValidToken(TIMU_SECRET, token, Date.now());
   if (ok) {
     sessionStorage.setItem(KEY_QR_UNTIL, String(Date.now() + QR_VALID_MS));
+    sessionStorage.setItem(KEY_QR_TOKEN, token);
   } else {
     showMessage("QRコードの有効期限が切れています。最新のQRを読み取り直してください");
   }
