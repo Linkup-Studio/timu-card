@@ -339,6 +339,15 @@ function renderAll() {
 (async () => {
   tickClock();
   setInterval(tickClock, 1000);
+
+  // ?reset=1 で今日の打刻データ（この端末内のみ）をリセット（テスト・打ち直し用。シートには影響しない）
+  if (new URLSearchParams(location.search).get("reset") === "1") {
+    const records = loadRecords();
+    delete records[todayKey()];
+    saveRecords(records);
+    showMessage("この端末内の今日の打刻データをリセットしました");
+  }
+
   await initQrGate();
   renderAll();
   // QR認証の期限切れを即時反映する（残り時間表示とボタン状態）
